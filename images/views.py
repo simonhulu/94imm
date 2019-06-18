@@ -1,8 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render,HttpResponseRedirect
 from images.models import *
 from django.http import HttpResponse
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage, InvalidPage
-import random
 
 
 # Create your views here.
@@ -26,60 +25,66 @@ def index(request):
 
 
 def page(request, i_id):
-    page_arr = Page.objects.get(id=i_id)
-    imgs = []
-    tags = []
-    typelist = []
-    time = page_arr.sendtime
-    typeid = page_arr.typeid
-    pagetype = Type.objects.get(id=typeid).type
-    title = page_arr.title
-    taglist = page_arr.tagid
-    tag_arr = taglist.replace("[", "").replace("]", "").split(",")
-    type_list = Type.objects.all().order_by("id")
-    for type_arr in type_list:
-        type = type_arr.type
-        type_id = type_arr.id
-        typelist.append({"type": type, "type_id": type_id})
-    for t_id in tag_arr:
-        tagid = t_id.strip(" ")
-        tag = Tag.objects.get(id=tagid).tag
-        tags.append({"tname": tag, "tid": tagid})
-    imglist = Image.objects.filter(pageid=i_id)
-    for img_arr in imglist:
-        img = img_arr.imageurl
-        imgs.append(img)
-    return render(request, 'page.html',
-                  {"data": imgs, "tag": tags, "title": title, "type": pagetype, "typeid": typeid, "time": time,
-                   "similar": similar(typeid,i_id),"typelist":typelist,"pageid":i_id})
+    try:
+        page_arr = Page.objects.get(id=i_id)
+        imgs = []
+        tags = []
+        typelist = []
+        time = page_arr.sendtime
+        typeid = page_arr.typeid
+        pagetype = Type.objects.get(id=typeid).type
+        title = page_arr.title
+        taglist = page_arr.tagid
+        tag_arr = taglist.replace("[", "").replace("]", "").split(",")
+        type_list = Type.objects.all().order_by("id")
+        for type_arr in type_list:
+            type = type_arr.type
+            type_id = type_arr.id
+            typelist.append({"type": type, "type_id": type_id})
+        for t_id in tag_arr:
+            tagid = t_id.strip(" ")
+            tag = Tag.objects.get(id=tagid).tag
+            tags.append({"tname": tag, "tid": tagid})
+        imglist = Image.objects.filter(pageid=i_id)
+        for img_arr in imglist:
+            img = img_arr.imageurl
+            imgs.append(img)
+        return render(request, 'page.html',
+                      {"data": imgs, "tag": tags, "title": title, "type": pagetype, "typeid": typeid, "time": time,
+                       "similar": similar(typeid),"typelist":typelist,"pageid":i_id})
+    except:
+        return HttpResponseRedirect('/')
 
 def page_all(request, i_id):
-    page_arr = Page.objects.get(id=i_id)
-    imgs = []
-    tags = []
-    typelist = []
-    time = page_arr.sendtime
-    typeid = page_arr.typeid
-    pagetype = Type.objects.get(id=typeid).type
-    title = page_arr.title
-    taglist = page_arr.tagid
-    tag_arr = taglist.replace("[", "").replace("]", "").split(",")
-    type_list = Type.objects.all().order_by("id")
-    for type_arr in type_list:
-        type = type_arr.type
-        type_id = type_arr.id
-        typelist.append({"type": type, "type_id": type_id})
-    for t_id in tag_arr:
-        tagid = t_id.strip(" ")
-        tag = Tag.objects.get(id=tagid).tag
-        tags.append({"tname": tag, "tid": tagid})
-    imglist = Image.objects.filter(pageid=i_id)
-    for img_arr in imglist:
-        img = img_arr.imageurl
-        imgs.append(img)
-    return render(request, 'page_all.html',
-                  {"data": imgs, "tag": tags, "title": title, "type": pagetype, "typeid": typeid, "time": time,
-                   "similar": similar(typeid,i_id),"typelist":typelist,"pageid":i_id})
+    try:
+        page_arr = Page.objects.get(id=i_id)
+        imgs = []
+        tags = []
+        typelist = []
+        time = page_arr.sendtime
+        typeid = page_arr.typeid
+        pagetype = Type.objects.get(id=typeid).type
+        title = page_arr.title
+        taglist = page_arr.tagid
+        tag_arr = taglist.replace("[", "").replace("]", "").split(",")
+        type_list = Type.objects.all().order_by("id")
+        for type_arr in type_list:
+            type = type_arr.type
+            type_id = type_arr.id
+            typelist.append({"type": type, "type_id": type_id})
+        for t_id in tag_arr:
+            tagid = t_id.strip(" ")
+            tag = Tag.objects.get(id=tagid).tag
+            tags.append({"tname": tag, "tid": tagid})
+        imglist = Image.objects.filter(pageid=i_id)
+        for img_arr in imglist:
+            img = img_arr.imageurl
+            imgs.append(img)
+        return render(request, 'page_all.html',
+                      {"data": imgs, "tag": tags, "title": title, "type": pagetype, "typeid": typeid, "time": time,
+                       "similar": similar(typeid),"typelist":typelist,"pageid":i_id})
+    except:
+        return render(request, '404.html')
 
 def tag(request, tid):
     if request.method == "GET":
@@ -121,20 +126,21 @@ def type(request, typeid):
         return render(request, 'index.html', {"data": imgs,"typelist":typelist})
 
 
-def similar(type_id,id):
+def similar(id):
     similarlist = []
-    sidlist = Page.objects.filter(typeid=type_id).order_by("-id")
+    sidlist = Page.objects.filter(typeid=id).order_by("-id")
     i = 0
     for s in sidlist:
-        stitle = s.title
-        pid = s.id
-        tid = s.typeid
-        firstimg=s.firstimg
-        sendtime=s.sendtime
-        if pid != id:
-            similarlist.append({"stitle": stitle, "tid": tid, "pid": pid,"firstimg":firstimg,"sendtime":sendtime})
-    return_arr = random.sample(similarlist,12)
-    return return_arr
+        if i < 12:
+            stitle = s.title
+            pid = s.id
+            tid = s.typeid
+            firstimg=s.firstimg
+            sendtime=s.sendtime
+            if pid!=id:
+                similarlist.append({"stitle": stitle, "tid": tid, "pid": pid,"firstimg":firstimg,"sendtime":sendtime})
+                i += 1
+    return similarlist
 
 
 def search(request):
@@ -155,4 +161,13 @@ def search(request):
             sendtime = page.sendtime
             imgs.append({"pid": id, "firstimg": firstimg, "title": title, "sendtime": sendtime})
         return render(request, 'index.html', {"data": imgs, "typelist": typelist})
+
+def delete(request):
+    if request.method=="POST":
+        id_list=request.POST
+        for id in id_list:
+            page=Page.objects.get(id=id).delete()
+            Image.objects.filter(pageid=id).delete()
+        return render(request, 'index.html', {"data": imgs, "typelist": typelist})
+
 
