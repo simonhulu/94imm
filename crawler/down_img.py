@@ -11,7 +11,7 @@ dbhost={
         "host":"127.0.0.1",
         "dbname":"silumz",
         "user":"root",
-        "password":"root"
+        "password":"Zsj520hc1314"
     }
 
 
